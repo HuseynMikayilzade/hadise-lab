@@ -1,8 +1,19 @@
+# asılılıqlar və build
 node_modules/
 .next/
 out/
-.env*.local
-.env
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# mühit dəyişənləri: heç vaxt commit olunmur (nümunə fayl istisnadır)
+.env*
+!.env.example
+
+# test artefaktları və ekran görüntüləri
+shots/
+test-results/
+playwright-report/
+blob-report/
+coverage/
+*.png

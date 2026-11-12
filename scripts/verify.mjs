@@ -17,7 +17,11 @@ import { randomUUID, randomInt } from "node:crypto";
 import path from "node:path";
 
 const BASE = process.env.BASE ?? "http://localhost:3100";
-const TOKEN = process.env.ADMIN_TOKEN ?? "local-test-token";
+const TOKEN = process.env.ADMIN_TOKEN;
+if (!TOKEN) {
+  console.error("ADMIN_TOKEN mühit dəyişəni tələb olunur (serverdəki ilə eyni olmalıdır).");
+  process.exit(2);
+}
 const OUT = process.env.OUT ?? "shots";
 const CODE = process.env.CODE ?? `verify-${Date.now().toString(36)}`;
 mkdirSync(OUT, { recursive: true });
