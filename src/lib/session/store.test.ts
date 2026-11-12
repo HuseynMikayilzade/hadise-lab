@@ -1,10 +1,10 @@
-import { Redis } from "@upstash/redis";
 import { describe, expect, it } from "vitest";
 import { EXPERIMENTS, LIST_NAMES } from "@/experiments/registry";
 import { seededRng } from "@/lib/engine/rng";
 import { RedisLabStore } from "./lab-store";
 import { MemoryRedis } from "./memory-redis";
 import { CountingRedis, type RedisLike } from "./redis-like";
+import { createUpstashRedis, toHashObject } from "./upstash";
 import type { LabStore, SubmitRequest } from "./types";
 import type { ExperimentId } from "@/experiments/types";
 
@@ -13,18 +13,14 @@ import type { ExperimentId } from "@/experiments/types";
  * - yaddaşdakı əkiz (Lua skriptlərinin JS əkizləri) - həmişə;
  * - real Redis (Upstash) - yalnız REDIS_TEST_URL / REDIS_TEST_TOKEN verildikdə (Lua skriptləri real icra olunur).
  */
-const backends: { name: string; create: () => RedisLike }[] = [{ name: "memory twin", create: () => new MemoryRedis() }];
-if (process.env.REDIS_TEST_URL && process.env.REDIS_TEST_TOKEN) {
-  const redis = new Redis({ url: process.env.REDIS_TEST_URL, token: process.env.REDIS_TEST_TOKEN, automaticDeserialization: false });
-  backends.push({
-    name: "upstash",
-    create: () => ({
-      eval: (s, k, a) => redis.eval(s, k, a),
-      hgetall: (k) => redis.hgetall<Record<string, unknown>>(k),
-      lrange: (k, a, b) => redis.lrange<string>(k, a, b),
-      pfcount: (k) => redis.pfcount(k),
-    }),
-  });
+const backends: { name: string; create: () => RedisLike; timeout: number }[] = [
+  { name: "memory twin", create: () => new MemoryRedis(), timeout: 5_000 },
+];
+const testUrl = process.env.REDIS_TEST_URL;
+const testToken = process.env.REDIS_TEST_TOKEN;
+if (testUrl && testToken) {
+  // Production-dakı adapterin özü - ayrıca test adapteri yox (əvvəlki səhv məhz bu fərqdə gizlənirdi).
+  backends.push({ name: "upstash", create: () => createUpstashRedis(testUrl, testToken), timeout: 30_000 });
 }
 
 function request(store: LabStore, code: string, exp: ExperimentId, deviceId: string, input: unknown) {
@@ -35,9 +31,27 @@ function request(store: LabStore, code: string, exp: ExperimentId, deviceId: str
 }
 
 for (const backend of backends) {
-  describe(`LabStore contract (${backend.name})`, () => {
+  describe(`LabStore contract (${backend.name})`, { timeout: backend.timeout }, () => {
     const make = () => new RedisLabStore(backend.create());
     const code = () => `test-${Math.random().toString(36).slice(2, 10)}`;
+
+    it("setActive persists: getState returns the new active id and an incremented version", async () => {
+      const store = make();
+      const c = code();
+      const before = await store.getState(c);
+      const returned = await store.updateState(c, { active: "dice" });
+      const read = await store.getState(c);
+      expect(returned.active).toBe("dice");
+      expect(read.active).toBe("dice");
+      expect(read.version).toBe(before.version + 1);
+      await store.updateState(c, { experiment: "dice", control: { mode: "auto", status: "closed" } });
+      const again = await store.getState(c);
+      expect(again.version).toBe(before.version + 2);
+      expect(again.controls.dice).toMatchObject({ mode: "auto", status: "closed" });
+      await store.updateState(c, { active: null });
+      expect((await store.getState(c)).active).toBeNull();
+      await store.resetAll(c, LIST_NAMES);
+    });
 
     it("rejects submissions for an inactive experiment", async () => {
       const store = make();
@@ -126,6 +140,16 @@ for (const backend of backends) {
     });
   });
 }
+
+describe("toHashObject normalizes every HGETALL shape", () => {
+  it("handles flat arrays (automaticDeserialization: false), objects and empty results", () => {
+    expect(toHashObject(["active", "venn", "ver", "1"])).toEqual({ active: "venn", ver: "1" });
+    expect(toHashObject({ active: "venn", ver: 1 })).toEqual({ active: "venn", ver: "1" });
+    expect(toHashObject([])).toBeNull();
+    expect(toHashObject({})).toBeNull();
+    expect(toHashObject(null)).toBeNull();
+  });
+});
 
 describe("memory twin reset leaves no experiment keys behind", () => {
   it("deletes every key of the experiment", async () => {

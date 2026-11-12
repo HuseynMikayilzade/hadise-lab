@@ -25,6 +25,7 @@ export async function POST(request: Request, context: RouteContext) {
   if (!parsed.success) return error(422, "invalid_action", "Naməlum əməliyyat.");
   const body = parsed.data;
   const store = getStore();
+  console.info(`[admin] ${code} action=${body.action} exp=${"exp" in body ? String(body.exp) : "-"}`);
 
   try {
     switch (body.action) {
