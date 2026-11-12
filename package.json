@@ -1,0 +1,29 @@
+{
+  "name": "hadise-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Canlı hadisə laboratoriyası - Tədqiqat analitikası təqdimatı üçün QR eksperimenti",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@upstash/redis": "1.41.0",
+    "next": "16.4.6",
+    "qrcode.react": "4.2.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "playwright": "1.55.1",
+    "typescript": "5.7.3",
+    "vitest": "5.1.0"
+  }
+}
