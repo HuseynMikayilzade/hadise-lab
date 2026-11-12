@@ -110,7 +110,39 @@ button, input, select { font: inherit; color: inherit; }
 .ctl-primary:hover:not(:disabled) { background: #174a52; }
 .ctl-quiet { color: var(--muted); }
 .ctl-check { display: inline-flex; align-items: center; gap: 6px; }
-.control-select select { padding-right: 28px; max-width: 280px; }
+/* Eksperiment seçicisi: öz oxu, təqdimat rəngləri; Chrome-da açılan siyahı da tam stillənir (base-select). */
+.control-select select {
+  appearance: none; -webkit-appearance: none;
+  max-width: 300px; padding: 0 34px 0 12px; font-weight: 600; color: var(--heading);
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%231D5C66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+.control-select select:hover { border-color: var(--heading); }
+.control-select select:focus-visible { outline: 2px solid var(--highlight); outline-offset: 2px; border-color: var(--heading); }
+.control-select option { color: var(--ink); background: var(--surface); font-weight: 400; }
+.control-select option:checked { color: #fff; background: var(--heading); }
+
+@supports (appearance: base-select) {
+  .control-select select, .control-select select::picker(select) { appearance: base-select; }
+  .control-select select { background-image: none; display: inline-flex; align-items: center; gap: 8px; padding-right: 12px; }
+  .control-select select::picker-icon { color: var(--heading); transition: rotate var(--t-fast) var(--ease); }
+  .control-select select:open::picker-icon { rotate: 180deg; }
+  .control-select select::picker(select) {
+    border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface);
+    box-shadow: 0 12px 32px rgba(34, 51, 59, 0.14); padding: 6px; margin-block: 6px;
+    max-height: min(70vh, 460px);
+  }
+  .control-select option {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+    font-size: 14px; cursor: pointer; transition: background var(--t-fast) var(--ease);
+  }
+  .control-select option::checkmark { display: none; }
+  .control-select option:hover, .control-select option:focus-visible { background: var(--canvas); color: var(--ink); outline: none; }
+  .control-select option:checked { background: var(--heading); color: #fff; font-weight: 600; }
+  .control-select option:first-child { color: var(--muted); }
+  .control-select option:first-child:checked { color: #fff; }
+}
 
 .segmented { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); padding: 3px; gap: 2px; }
 .segmented button { border: 0; background: transparent; border-radius: 7px; padding: 6px 14px; cursor: pointer; font-size: clamp(14px, 1.7vh, 18px); font-family: var(--font-serif); color: var(--ink); transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease); white-space: nowrap; }
