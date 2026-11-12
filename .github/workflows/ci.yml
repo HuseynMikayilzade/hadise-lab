@@ -3,16 +3,23 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      # Real Redis müqavilə testləri yalnız bu sirlər təyin olunduqda işləyir (ayrıca test bazası).
+      REDIS_TEST_URL: ${{ secrets.REDIS_TEST_URL }}
+      REDIS_TEST_TOKEN: ${{ secrets.REDIS_TEST_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run typecheck

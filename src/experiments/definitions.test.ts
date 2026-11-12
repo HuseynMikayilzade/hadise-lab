@@ -40,10 +40,11 @@ describe("every experiment definition", () => {
     expect(JSON.stringify(hidden)).not.toContain('"truth":{');
   });
 
-  it.each(["dice", "seasons", "venn", "bayes-test", "ab-test"] as const)("%s draws a different hidden truth on every crypto run", (id) => {
-    const a = run(EXPERIMENTS[id], 1, null).truth;
-    const b = run(EXPERIMENTS[id], 1, null).truth;
-    expect(a).not.toEqual(b);
+  // Zər yarı ehtimalla düzgündür (iki düzgün zər eynidir), ona görə 20 çəkiliş arasında fərqli həqiqətlər axtarılır:
+  // hamısının eyni olma ehtimalı 0,5^19 ≈ 2·10⁻⁶.
+  it.each(["dice", "seasons", "venn", "bayes-test", "ab-test"] as const)("%s draws varying hidden truths across crypto runs", (id) => {
+    const truths = Array.from({ length: 20 }, () => JSON.stringify(run(EXPERIMENTS[id], 1, null).truth));
+    expect(new Set(truths).size).toBeGreaterThan(1);
   });
 });
 

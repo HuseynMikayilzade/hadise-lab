@@ -71,7 +71,7 @@ export function VennProjector({ audience, sim, mode, fast }: ProjectorProps<Venn
   let takeaway: string | null = n >= 10 ? verdictText(main!) : null;
   if (truth && simView) {
     const or = simView.oddsRatio;
-    takeaway = `Gizli həqiqət: ${truth.independent ? "A və B asılı deyildi (OR = 1)" : `A və B asılı idi (OR = ${formatDecimal(truth.oddsRatio, 2)})`}. ${formatInt(total(simView.counts))} sınaqdan sonra öyrənilən OR = ${or ? formatDecimal(or.value, 2) : "-"}.`;
+    takeaway = `Gizli həqiqət: ${truth.independent ? "A və B asılı deyildi (OR = 1)" : `A və B asılı idi (OR = ${formatDecimal(truth.oddsRatio, 2)})`}. ${formatInt(total(simView.counts))} sınaqdan sonra öyrənilən OR = ${or ? `${formatDecimal(or.value, 2)}, 95% interval [${formatDecimal(or.interval.lower, 2)}; ${formatDecimal(or.interval.upper, 2)}]` : "-"}.`;
   }
 
   return (
